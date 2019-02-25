@@ -1,18 +1,26 @@
 from celery.schedules import crontab
+import shelve
+
+workertasks = {}
+workers = []
+shelf = shelve.open("endpoints.db")
+for endpoint in shelf:
+	workertasks[endpoint] = {
+	'task' : 'workers.' + shelf[endpoint]['worker_script'] + '.task',
+	'schedule' : crontab(minute="*")
+	}
+	workers.append('workers.'+ endpoint)
+
+	
 
 
-CELERY_IMPORTS = ('app.tasks.test')
+CELERY_IMPORTS = workers
 CELERY_TASK_RESULT_EXPIRES = 30
 CELERY_TIMEZONE = 'UTC'
 
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+CELERYBEAT_SCHEDULE = workertasks
 
-CELERYBEAT_SCHEDULE = {
-    'test-celery': {
-        'task': 'app.tasks.test.print_hello',
-        # Every minute
-        'schedule': crontab(minute="*"),
-    }
-}
+

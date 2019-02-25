@@ -10,7 +10,6 @@
 '''
 
 
-
 from flask_bootstrap import Bootstrap
 import os 
 import random
@@ -20,13 +19,15 @@ from celery import Celery
 import json
 import requests
 import configparser
-from webapp import celeryconfig
 from flask_restful import Resource, Api, reqparse
 import shelve
+from . import celeryconfig
 
+#initialize flask, celery
 app = Flask(__name__)
 bs = Bootstrap(app)
 api = Api(app)
+#app.config.from_object('config')
 
 # Celery configuration
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
@@ -35,6 +36,7 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 # Initialize Celery
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
+celery.config_from_object(celeryconfig)
 
 #inititialize Shelf
 def get_db():
@@ -43,6 +45,13 @@ def get_db():
         db = g._database = shelve.open("endpoints.db")
     print (db)
     return db
+
+def extract_shelf_data():
+    endpoints = []
+    shelf = shelve.open('endpoints.db')
+    for item in shelf:
+        endpoints.append(shelf[item])
+    return endpoints
 
 @app.teardown_appcontext
 def teardown_db(exception):
@@ -54,7 +63,8 @@ def teardown_db(exception):
 #app single page
 @app.route('/')
 def index():
-    return render_template('index.html')
+    endpoints = extract_shelf_data()
+    return render_template('index.html',endpoints=endpoints)
 
 
 #begin micro tasks
@@ -104,14 +114,14 @@ class endpoints(Resource):
 
 
 class endpoint(Resource):
-    def get(self, identifier):
+    def get(self, endpoint):
         shelf = get_db()
 
         # If the key does not exist in the data store, return a 404 error.
-        if not (identifier in shelf):
+        if not (endpoint in shelf):
             return {'message': 'Endpoint not found', 'data': {}}, 404
 
-        return {'message': 'Endpoint found', 'data': shelf[identifier]}, 200
+        return {'message': 'Endpoint found', 'data': shelf[endpoint]}, 200
 
     def delete(self, identifier):
         shelf = get_db()
@@ -125,31 +135,8 @@ class endpoint(Resource):
 
 
 
-@app.route('/apistatus/<task_id>')
-def apistatus(task_id):
-    task = get_json_from_api.AsyncResult(task_id)
-    #print(task.info)
-    if task.state == 'PENDING':
-        response = {
-            'state': task.state,
-            'status': 'Pending...'
-        }
-    elif task.state != 'FAILURE':
-        response = {
-            'state': task.state,
-            'status': task.info.get('status', '')
-        }
-        if 'result' in task.info:
-            response['result'] = task.info['result']
-    else:
-        response = {
-            'state': task.state,
-            'status': str(task.info),  # this is the exception raised
-            }
-    return jsonify(response)
+
 
 
 api.add_resource(endpoints, '/endpoints')
-api.add_resource(endpoint, '/endpoint/<string:identifier>')
-
-
+api.add_resource(endpoint, '/endpoint/<string:endpoint>')

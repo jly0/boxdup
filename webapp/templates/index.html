@@ -1,0 +1,37 @@
+<style>
+.center-div
+{
+     margin: 0 auto;
+     width: 400px; 
+}
+
+.wrapper {
+  display: grid;
+  grid-template-columns: 200px 200px;
+}
+
+.pass {
+	background-color: green;
+}
+
+.fail {
+	background-color: red;
+}
+</style>
+<html>
+	<head></head>
+	<body>
+		<div class="center-div">
+			<h1 align=center>External Monitor</h1>
+			<div class="wrapper", align=center>
+				{% for endpoint in endpoints if endpoint.boolean == 'True' %}
+	 			<div class="pass" style="width:200px;height:200px;border:1px solid #000;">{{endpoint.endpoint}}</div>
+				{% endfor %}
+				{% for endpoint in endpoints if endpoint.boolean == 'False' %}
+	 			<div class="fail" style="width:200px;height:200px;border:1px solid #000;">{{endpoint.endpoint}}</div>
+				{% endfor %}
+			</div>
+		</div>
+	</body>
+</html>
+
