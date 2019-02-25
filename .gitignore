@@ -30,4 +30,4 @@ deps/lua/src/liblua.a
 *.dSYM
 *.db
 redis*
-workers/*
+workers/*.py
