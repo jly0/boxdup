@@ -6,12 +6,11 @@ workers = []
 shelf = shelve.open("endpoints.db")
 for endpoint in shelf:
 	workertasks[endpoint] = {
-	'task' : 'workers.' + shelf[endpoint]['worker_script'] + '.task',
+	'task' : 'workers.' + shelf[endpoint]['worker'] + '.task',
 	'schedule' : crontab(minute="*")
 	}
 	workers.append('workers.'+ endpoint)
 
-	
 
 
 CELERY_IMPORTS = workers
