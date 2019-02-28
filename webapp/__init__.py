@@ -101,8 +101,9 @@ class endpoints(Resource):
         parser = reqparse.RequestParser()
 
         parser.add_argument('endpoint', required=True)
-        parser.add_argument('worker_script', required=True)
+        parser.add_argument('workers', required=True)
         parser.add_argument('boolean', required=True)
+        parser.add_argument('href', required=False)
 
         # Parse the arguments into an object
         args = parser.parse_args()
@@ -110,7 +111,7 @@ class endpoints(Resource):
         shelf = get_db()
         shelf[args['endpoint']] = args
 
-        return {'message': 'Device registered', 'data': args}, 201
+        return {'message': 'Endpoint registered', 'data': args}, 201
 
 
 class endpoint(Resource):

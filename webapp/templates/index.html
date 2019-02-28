@@ -1,13 +1,14 @@
+<html>
 <style>
 .center-div
 {
-     margin: 0 auto;
-     width: 400px; 
+     margin: 0 auto; 
 }
 
 .wrapper {
   display: grid;
-  grid-template-columns: 200px 200px;
+  grid-template-columns: repeat(6, 1fr);
+  grid-gap: 10px;
 }
 
 .pass {
@@ -18,14 +19,14 @@
 	background-color: red;
 }
 </style>
-<html>
-	<head></head>
+
+<head><meta http-equiv="refresh" content="10"></head>
 	<body>
 		<div class="center-div">
 			<h1 align=center>External Monitor</h1>
 			<div class="wrapper", align=center>
 				{% for endpoint in endpoints if endpoint.boolean == 'True' %}
-	 			<div class="pass" style="width:200px;height:200px;border:1px solid #000;">{{endpoint.endpoint}}</div>
+	 			<a href="https://www.google.com"><div class="pass" style="width:200px;height:200px;border:1px solid #000;">{{endpoint.endpoint}}</div></a>
 				{% endfor %}
 				{% for endpoint in endpoints if endpoint.boolean == 'False' %}
 	 			<div class="fail" style="width:200px;height:200px;border:1px solid #000;">{{endpoint.endpoint}}</div>
