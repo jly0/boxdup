@@ -102,7 +102,8 @@ class endpoints(Resource):
 
         parser.add_argument('endpoint', required=True)
         parser.add_argument('worker_script', required=True)
-        parser.add_argument('boolean', required=True)
+        parser.add_argument('boolean', required=False)
+        parser.add_argument('value', required=False)
 
         # Parse the arguments into an object
         args = parser.parse_args()
@@ -123,14 +124,14 @@ class endpoint(Resource):
 
         return {'message': 'Endpoint found', 'data': shelf[endpoint]}, 200
 
-    def delete(self, identifier):
+    def delete(self, endpoint):
         shelf = get_db()
 
         # If the key does not exist in the data store, return a 404 error.
-        if not (identifier in shelf):
+        if not (endpoint in shelf):
             return {'message': 'Endpoint not found', 'data': {}}, 404
 
-        del shelf[identifier]
+        del shelf[endpoint]
         return '', 204
 
 
