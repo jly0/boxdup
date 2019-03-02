@@ -1,4 +1,7 @@
 '''TODO:
+    -need to create a celerybeat to check up on endpoints
+    -need to parametize worker scripts
+    -need to create a front end
     -need to finish the dockerfile crappiolioio
 
    Open thoughts:
