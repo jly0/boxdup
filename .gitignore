@@ -31,3 +31,4 @@ deps/lua/src/liblua.a
 redis*
 workers/*.py
 *.pyc
+*pycache*
