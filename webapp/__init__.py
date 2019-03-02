@@ -22,7 +22,6 @@ import configparser
 from flask_restful import Resource, Api, reqparse
 import shelve
 from . import celeryconfig
-#from . import celerycontrol
 
 #initialize flask, celery
 app = Flask(__name__)
@@ -53,13 +52,6 @@ def extract_shelf_data():
     for item in shelf:
         endpoints.append(shelf[item])
     return endpoints
-
-def update_shelf_data(args,endpoint):
-    shelf = shelve.open('endpoints.db')
-    for arg in args.keys():
-        if args[arg] != None:
-            shelf[endpoint][arg] = args[arg]
-    shelf.close()
 
 @app.teardown_appcontext
 def teardown_db(exception):
@@ -109,24 +101,18 @@ class endpoints(Resource):
         parser = reqparse.RequestParser()
 
         parser.add_argument('endpoint', required=True)
-        parser.add_argument('worker', required=True)
+        parser.add_argument('worker_script', required=True)
         parser.add_argument('boolean', required=False)
         parser.add_argument('value', required=False)
-        parser.add_argument('href',required=False)
-
 
         # Parse the arguments into an object
         args = parser.parse_args()
-        args['boolean'] = args['boolean'].lower()
+
         shelf = get_db()
-        try:
-            if shelf[args['endpoint']]:
-                return {'message':'Endpoint already exists'}, 403
-        except:
-            pass
-        
         shelf[args['endpoint']] = args
-        return {'message': 'Endpoint added', 'data': args}, 201
+
+        return {'message': 'Device registered', 'data': args}, 201
+
 
 class endpoint(Resource):
     def get(self, endpoint):
@@ -146,20 +132,11 @@ class endpoint(Resource):
             return {'message': 'Endpoint not found', 'data': {}}, 404
 
         del shelf[endpoint]
-        return 'Endpoint deleted', 204
+        return '', 204
 
-    def patch(self,endpoint):
-        parser = reqparse.RequestParser()
 
-        parser.add_argument('worker', required=False)
-        parser.add_argument('boolean', required=False)
-        parser.add_argument('value', required=False)
-        parser.add_argument('href',required=False)
 
-        args = parser.parse_args()
-        update_shelf_data(args,endpoint)
-        return {'message': 'Endpoint updated', 'data': {}}, 200
-                
+
 
 
 api.add_resource(endpoints, '/endpoints')
