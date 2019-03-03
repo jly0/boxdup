@@ -22,8 +22,11 @@ import configparser
 from flask_restful import Resource, Api, reqparse
 import shelve
 from . import celeryconfig
+#from . import celerycontrol
+
 
 #initialize flask, celery
+
 app = Flask(__name__)
 bs = Bootstrap(app)
 api = Api(app)
@@ -36,14 +39,13 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 # Initialize Celery
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
-celery.config_from_object(celeryconfig)
+#celery.config_from_object(celeryconfig)
 
 #inititialize Shelf
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = shelve.open("endpoints.db")
-    print (db)
+        db = g._database = shelve.open("endpoints.db",writeback=True)
     return db
 
 def extract_shelf_data():
@@ -52,6 +54,7 @@ def extract_shelf_data():
     for item in shelf:
         endpoints.append(shelf[item])
     return endpoints
+
 
 @app.teardown_appcontext
 def teardown_db(exception):
@@ -66,23 +69,6 @@ def index():
     endpoints = extract_shelf_data()
     return render_template('index.html',endpoints=endpoints)
 
-
-#begin micro tasks
-'''@celery.task(bind=True)
-def get_json_pickle(self,payload):
-    print (payload)
-    keylist = []
-    saved_pickle = payload['saved_pickle']
-    pickle = payload['name']
-    df = pd.read_pickle('/data/' + saved_pickle)
-    df.to_pickle(pickle)
-    htmlDF =  df.head(n=10).to_html().replace('<table border="1" class="dataframe">','<table class="table" id="dataframe">')
-    for key in df.columns.values:
-        meta = {'key':key}
-        keylist.append(meta)
-    result = [{'htmlDF':htmlDF,'keylist':keylist}]
-    return({'result':htmlDF,'keylist':keylist})
-    count = 0'''
 
 
 class endpoints(Resource):
@@ -101,18 +87,25 @@ class endpoints(Resource):
         parser = reqparse.RequestParser()
 
         parser.add_argument('endpoint', required=True)
-        parser.add_argument('worker_script', required=True)
+        parser.add_argument('worker', required=True)
         parser.add_argument('boolean', required=False)
         parser.add_argument('value', required=False)
+        parser.add_argument('href',required=False)
 
         # Parse the arguments into an object
         args = parser.parse_args()
-
+        args['boolean'] = args['boolean'].lower()
+        if args['boolean'] != 'true' and args['boolean'] != 'false':
+            args['boolean'] = 'true'
         shelf = get_db()
+        '''try:
+            if shelf[args['endpoint']]:
+                return {'message':'Endpoint already exists'}, 403
+        except:
+            pass'''
+        
         shelf[args['endpoint']] = args
-
-        return {'message': 'Device registered', 'data': args}, 201
-
+        return {'message': 'Endpoint added', 'data': args}, 201
 
 class endpoint(Resource):
     def get(self, endpoint):
@@ -132,11 +125,26 @@ class endpoint(Resource):
             return {'message': 'Endpoint not found', 'data': {}}, 404
 
         del shelf[endpoint]
-        return '', 204
+        return {'message':'Endpoint deleted', 'data':{}}, 200
 
+    def patch(self,endpoint):
+        shelf = get_db()
+        parser = reqparse.RequestParser()
 
+        parser.add_argument('worker', required=False)
+        parser.add_argument('boolean', required=False)
+        parser.add_argument('value', required=False)
+        parser.add_argument('href',required=False)
 
+        args = parser.parse_args()
+        for arg in args.keys():
+            if args[arg] != None:
+                shelf[endpoint][arg] = args[arg]
+                print (args[arg])
+                print (shelf[endpoint][arg])
 
+        return {'message': 'Endpoint updated', 'data': shelf[endpoint]} , 200
+                
 
 
 api.add_resource(endpoints, '/endpoints')
