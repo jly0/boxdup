@@ -1,50 +1,151 @@
-<style>
-img {
-    max-width: 20%;
-    max-height: 20%;
-}
-
-.center-div
-{
-     margin: 0 auto;
-     width: 800px; 
-}
-
-.wrapper {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-gap: 10px;
-}
-
-.pass {
-	background-color: #93ca3b;
-	margin-left: 2px;
-}
-
-.fail {
-	background-color: ff0030;
-	margin-left: 2px;
-}
-</style>
 <html>
 	<head>
-	 <meta http-equiv="refresh" content="30">
+		<style>
+		body {font-family: Arial, Helvetica, sans-serif;}
+		* {box-sizing: border-box;}
+
+		img {
+		    max-width: 20%;
+		    max-height: 20%;
+		}
+
+		.center-div
+		{
+		     margin: 0 auto;
+		     width: 800px; 
+		}
+
+		.wrapper {
+		  display: grid;
+		  grid-template-columns: repeat(4, 1fr);
+		  grid-gap: 10px;
+		}
+
+		.pass {
+			background-color: #93ca3b;
+			margin-left: 2px;
+		}
+
+		.fail {
+			background-color: ff0030;
+			margin-left: 2px;
+		}
+		{box-sizing: border-box;}
+
+		/* Button used to open the contact form - fixed at the bottom of the page */
+		.open-button {
+		  background-color: #555;
+		  color: white;
+		  border: none;
+		  cursor: pointer;
+		  opacity: 0.8;
+		}
+
+		/* The popup form - hidden by default */
+		.form-popup {
+		  position:fixed;
+		  display: none;
+		  border: 3px solid black;
+		  position:absolute;
+		  top:50%;
+		  left:50%;
+		  width:400px;  /* adjust as per your needs */
+		  height:500px;   /* adjust as per your needs */
+		  margin-left:-200px;   /* negative half of width above */
+		  margin-top:-200px;   /* negative half of height above */
+		}
+
+		/* Add styles to the form container */
+		.form-container {
+		  max-width: 400px;
+		  padding: 7px;
+		  background-color: white;
+		}
+
+		/* Full-width input fields */
+		.form-container input[type=text], .form-container input[type=password] {
+		  width: 100%;
+		  padding: 15px;
+		  margin: 5px 0 22px 0;
+		  border: none;
+		  background: #f1f1f1;
+		}
+
+		/* When the inputs get focus, do something */
+		.form-container input[type=text]:focus, .form-container input[type=password]:focus {
+		  background-color: #ddd;
+		  outline: none;
+		}
+
+		/* Set a style for the submit/login button */
+		.form-container .btn {
+		  background-color: #4CAF50;
+		  color: white;
+		  padding: 16px 20px;
+		  border: none;
+		  cursor: pointer;
+		  width: 100%;
+		  margin-bottom:10px;
+		  opacity: 0.8;
+		}
+
+		/* Add a red background color to the cancel button */
+		.form-container .cancel {
+		  background-color: red;
+		}
+
+		/* Add some hover effects to buttons */
+		.form-container .btn:hover, .open-button:hover {
+		  opacity: 1;
+		}
+	</style>
+		<meta http-equiv="refresh" content="30">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
 	</head>
-	<body>
-		<div class="center-div">
-			<h1 align=center>External Monitor</h1>
-			<div class="wrapper", align=center>
-				{% for endpoint in endpoints if endpoint.boolean == 'True' and endpoint.value is none%}
-	 			<div class="pass" style="width:200px;height:200px;border:1px solid #000;"><h1>{{endpoint.endpoint}}</h1><img src="/static/happy.png"></div>
-				{% endfor %}
-				{% for endpoint in endpoints if endpoint.value is defined and endpoint.value is not none%}
-                                <div class="pass" style="width:200px;height:200px;border:1px solid #000;"><h1>{{endpoint.endpoint}}</h1><p><h1>{{endpoint.value}}</h1><img src="/static/happy.png"></div>
-                                {% endfor %}
-				{% for endpoint in endpoints if endpoint.boolean == 'False' and endpoint.value is none%}
-	 			<div class="fail" style="width:200px;height:200px;border:1px solid #000;"><h1>{{endpoint.endpoint}}</h1><p> </p><img src="/static/angry.png"></div>
-				{% endfor %}
+		<body>
+			<div class="center-div">
+				<h1 align=center>External Monitor</h1>
+				<div class="wrapper", align=center>
+
+					
+					{% for endpoint in endpoints if endpoint.boolean == 'true' %}
+	                <div class="pass" style="width:200px;height:200px;border:1px solid #000;"><h1>{{endpoint.endpoint}}</h1><p><h1>{{endpoint.value}}</h1><a href="{{endpoint.href}}"><img src="/static/happy.png"></a></div>
+	                {% endfor %}
+
+	                {% for endpoint in endpoints if endpoint.boolean == 'false' %}
+	                <div class="fail" style="width:200px;height:200px;border:1px solid #000;"><h1>{{endpoint.endpoint}}</h1><p><h1>{{endpoint.value}}</h1><a href="{{endpoint.href}}"><img src="/static/happy.png"></a></div>
+	                {% endfor %}
+					
+					<div style="width:200px;height:200px;border:1px solid #000;">
+						<input type="image" class="open-button" onclick="openForm()" src= "/static/addition.png" style="width:100px;height:100px;">
+					</div>
+				</div>
 			</div>
-		</div>
-	</body>
+
+
+			<div class="form-popup" id="myForm">
+				<form action="/endpoints" method="post" class="form-container">
+					<input type="text" placeholder="endpoint name" name="endpoint" required>
+					<input type="text" placeholder="worker script" name="worker" required>
+					<input type="text" placeholder="boolean" name="boolean" >
+					<input type="text" placeholder="value" name="value">
+					<input type="text" placeholder="href" name="href" >
+					<button type="submit" class="btn">Add Endpoint</button>
+					<button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+				</form>
+			</div>
+
+			<script type="text/javascript">
+				function openForm() {
+			  	document.getElementById("myForm").style.display = "block";
+			  	}
+
+				function closeForm() {
+			 	document.getElementById("myForm").style.display = "none";
+				}
+			</script>
+		</body>
+
 </html>
 
