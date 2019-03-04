@@ -32,6 +32,7 @@ bs = Bootstrap(app)
 api = Api(app)
 #app.config.from_object('config')
 
+
 # Celery configuration
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
@@ -39,7 +40,9 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 # Initialize Celery
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
-#celery.config_from_object(celeryconfig)
+celery.config_from_object(celeryconfig)
+
+
 
 #inititialize Shelf
 def get_db():
